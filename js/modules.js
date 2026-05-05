@@ -66,16 +66,22 @@ const Reports = (() => {
   let _salesChart = null;
   let _paymentChart = null;
 
+  // Simpan data laporan terakhir untuk keperluan export
+  let _lastReportData = null;
+  let _lastPeriod = 'monthly';
+
   async function init() {
     Utils.el('report-period').addEventListener('change', load);
-    Utils.el('export-report-btn').addEventListener('click', () => Utils.toast('Fitur export PDF tersedia di versi Pro', 'info'));
+    Utils.el('export-report-btn').addEventListener('click', exportPDF);
     await load();
   }
 
   async function load() {
     const period = Utils.el('report-period').value;
+    _lastPeriod = period;
     const res = await API.getReport(period);
     if (!res.success) { Utils.toast('Gagal memuat laporan: ' + res.message, 'error'); return; }
+    _lastReportData = res.data;
     renderStats(res.data);
     renderSalesChart(res.data.dailySales || []);
     renderTopProducts(res.data.topProducts || []);
@@ -191,6 +197,301 @@ const Reports = (() => {
         <circle cx="${cx}" cy="${cy}" r="30" fill="var(--bg-surface)"/>
         <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" fill="var(--text-muted)">Total</text>
       </svg>${legend}</div>`;
+  }
+
+  // ── Export PDF ────────────────────────────────
+
+  async function exportPDF() {
+    if (!_lastReportData) {
+      Utils.toast('Muat laporan terlebih dahulu', 'warning');
+      return;
+    }
+
+    const btn = Utils.el('export-report-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Membuat PDF...';
+
+    try {
+      // Load jsPDF dari CDN jika belum ada
+      await loadJsPDF();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const settings = State.getSettings();
+      const data = _lastReportData;
+      const periodLabel = { daily: 'Harian', weekly: 'Mingguan', monthly: 'Bulanan' }[_lastPeriod];
+
+      const pageW = 210;
+      const margin = 15;
+      const contentW = pageW - margin * 2;
+      let y = 0;
+
+      // ── HEADER ──────────────────────────────
+      // Background header
+      doc.setFillColor(15, 15, 20);
+      doc.rect(0, 0, pageW, 42, 'F');
+
+      // Gradient simulasi (kotak ungu)
+      doc.setFillColor(124, 58, 237);
+      doc.rect(0, 0, 6, 42, 'F');
+
+      // Nama toko
+      doc.setTextColor(240, 240, 248);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text(settings.storeName || 'KASIEKU', margin, 16);
+
+      // Subjudul
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(144, 144, 176);
+      doc.text(`Laporan Penjualan ${periodLabel}`, margin, 23);
+      doc.text(settings.storeAddress || '', margin, 28);
+      if (settings.storePhone) doc.text('📞 ' + settings.storePhone, margin, 33);
+
+      // Tanggal cetak (kanan atas)
+      doc.setTextColor(144, 144, 176);
+      doc.setFontSize(8);
+      doc.text('Dicetak: ' + Utils.formatDateTime(new Date().toISOString()), pageW - margin, 16, { align: 'right' });
+      doc.text(`Periode: ${Utils.formatDate(data.startDate)} – ${Utils.formatDate(data.endDate)}`, pageW - margin, 22, { align: 'right' });
+
+      y = 52;
+
+      // ── RINGKASAN STATISTIK ──────────────────
+      doc.setFillColor(17, 17, 24);
+      doc.roundedRect(margin, y, contentW, 8, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(124, 58, 237);
+      doc.text('RINGKASAN', margin + 4, y + 5.5);
+      y += 12;
+
+      // 4 kotak statistik
+      const statW = (contentW - 9) / 4;
+      const stats = [
+        { label: 'Total Pendapatan', value: Utils.formatRupiah(data.totalRevenue || 0), color: [124, 58, 237] },
+        { label: 'Total Transaksi',  value: String(data.totalTransactions || 0),         color: [6, 182, 212] },
+        { label: 'Rata-rata/Trx',    value: Utils.formatRupiah(data.avgTransaction || 0), color: [16, 185, 129] },
+        { label: 'Item Terjual',     value: String(data.totalItemsSold || 0),             color: [245, 158, 11] },
+      ];
+
+      stats.forEach((s, i) => {
+        const x = margin + i * (statW + 3);
+        doc.setFillColor(17, 17, 24);
+        doc.roundedRect(x, y, statW, 20, 2, 2, 'F');
+        // Border kiri berwarna
+        doc.setFillColor(...s.color);
+        doc.rect(x, y, 2, 20, 'F');
+        // Label
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(90, 90, 122);
+        doc.text(s.label, x + 5, y + 7);
+        // Nilai
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(s.value.length > 12 ? 8 : 10);
+        doc.setTextColor(...s.color);
+        doc.text(s.value, x + 5, y + 15);
+      });
+
+      y += 26;
+
+      // ── GRAFIK PENJUALAN (bar sederhana) ────
+      if (data.dailySales && data.dailySales.length > 0) {
+        doc.setFillColor(17, 17, 24);
+        doc.roundedRect(margin, y, contentW, 8, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(124, 58, 237);
+        doc.text('GRAFIK PENJUALAN', margin + 4, y + 5.5);
+        y += 12;
+
+        const chartH = 40;
+        const chartY = y;
+        const maxRev = Math.max(...data.dailySales.map(d => d.revenue), 1);
+        const barAreaW = contentW - 10;
+        const barW = Math.max(3, (barAreaW / data.dailySales.length) - 2);
+
+        // Background chart
+        doc.setFillColor(12, 12, 18);
+        doc.roundedRect(margin, chartY, contentW, chartH + 10, 2, 2, 'F');
+
+        data.dailySales.forEach((d, i) => {
+          const bH = Math.max(1, (d.revenue / maxRev) * (chartH - 8));
+          const bX = margin + 5 + i * (barAreaW / data.dailySales.length);
+          const bY = chartY + chartH - bH;
+
+          // Bar dengan warna gradient simulasi
+          const ratio = i / Math.max(data.dailySales.length - 1, 1);
+          const r = Math.round(124 + (6 - 124) * ratio);
+          const g = Math.round(58 + (182 - 58) * ratio);
+          const b = Math.round(237 + (212 - 237) * ratio);
+          doc.setFillColor(r, g, b);
+          doc.roundedRect(bX, bY, barW, bH, 1, 1, 'F');
+
+          // Label tanggal
+          if (data.dailySales.length <= 15) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            doc.setTextColor(90, 90, 122);
+            doc.text(String(d.label || ''), bX + barW / 2, chartY + chartH + 7, { align: 'center' });
+          }
+        });
+
+        y += chartH + 16;
+      }
+
+      // ── PRODUK TERLARIS ──────────────────────
+      if (data.topProducts && data.topProducts.length > 0) {
+        doc.setFillColor(17, 17, 24);
+        doc.roundedRect(margin, y, contentW, 8, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(124, 58, 237);
+        doc.text('PRODUK TERLARIS', margin + 4, y + 5.5);
+        y += 12;
+
+        // Header tabel
+        doc.setFillColor(20, 20, 30);
+        doc.rect(margin, y, contentW, 7, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(90, 90, 122);
+        doc.text('No', margin + 3, y + 4.8);
+        doc.text('Nama Produk', margin + 12, y + 4.8);
+        doc.text('Terjual', margin + 110, y + 4.8);
+        doc.text('Pendapatan', margin + 135, y + 4.8);
+        y += 7;
+
+        const maxQty = data.topProducts[0]?.qty || 1;
+        data.topProducts.slice(0, 10).forEach((p, i) => {
+          // Baris zebra
+          if (i % 2 === 0) {
+            doc.setFillColor(15, 15, 22);
+            doc.rect(margin, y, contentW, 7, 'F');
+          }
+
+          // Progress bar kecil
+          const barPct = p.qty / maxQty;
+          doc.setFillColor(40, 40, 60);
+          doc.rect(margin + 12, y + 4, 90, 2, 'F');
+          doc.setFillColor(124, 58, 237);
+          doc.rect(margin + 12, y + 4, 90 * barPct, 2, 'F');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(90, 90, 122);
+          doc.text(String(i + 1), margin + 3, y + 4.5);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(200, 200, 220);
+          // Potong nama jika terlalu panjang
+          const name = String(p.name || '').substring(0, 38);
+          doc.text(name, margin + 12, y + 4.5);
+
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(6, 182, 212);
+          doc.text(String(p.qty), margin + 110, y + 4.5);
+
+          doc.setTextColor(16, 185, 129);
+          doc.text(Utils.formatRupiah(p.revenue), margin + 135, y + 4.5);
+
+          y += 7;
+        });
+
+        y += 4;
+      }
+
+      // ── METODE PEMBAYARAN ────────────────────
+      if (data.paymentMethods && Object.keys(data.paymentMethods).length > 0) {
+        // Cek apakah perlu halaman baru
+        if (y > 240) { doc.addPage(); y = 20; }
+
+        doc.setFillColor(17, 17, 24);
+        doc.roundedRect(margin, y, contentW, 8, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(124, 58, 237);
+        doc.text('METODE PEMBAYARAN', margin + 4, y + 5.5);
+        y += 12;
+
+        const methods = Object.entries(data.paymentMethods);
+        const totalTrx = methods.reduce((s, [, v]) => s + v, 0);
+        const colors = [[124,58,237],[6,182,212],[16,185,129],[245,158,11],[239,68,68]];
+        const methodNames = { cash:'Tunai', debit:'Kartu Debit', qris:'QRIS', transfer:'Transfer' };
+
+        methods.forEach(([method, count], i) => {
+          const pct = Math.round((count / totalTrx) * 100);
+          const color = colors[i % colors.length];
+
+          doc.setFillColor(17, 17, 24);
+          doc.rect(margin, y, contentW, 8, 'F');
+
+          // Label
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(200, 200, 220);
+          doc.text(methodNames[method] || method.toUpperCase(), margin + 4, y + 5.5);
+
+          // Progress bar
+          const barX = margin + 40;
+          const barW2 = contentW - 60;
+          doc.setFillColor(30, 30, 45);
+          doc.roundedRect(barX, y + 2.5, barW2, 4, 1, 1, 'F');
+          doc.setFillColor(...color);
+          doc.roundedRect(barX, y + 2.5, barW2 * (pct / 100), 4, 1, 1, 'F');
+
+          // Persen
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...color);
+          doc.text(`${pct}% (${count}x)`, pageW - margin, y + 5.5, { align: 'right' });
+
+          y += 9;
+        });
+        y += 4;
+      }
+
+      // ── FOOTER ──────────────────────────────
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let pg = 1; pg <= pageCount; pg++) {
+        doc.setPage(pg);
+        doc.setFillColor(12, 12, 18);
+        doc.rect(0, 285, pageW, 12, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(90, 90, 122);
+        doc.text(`${settings.storeName || 'KASIEKU'} — Laporan ${periodLabel}`, margin, 291);
+        doc.text(`Halaman ${pg} / ${pageCount}`, pageW - margin, 291, { align: 'right' });
+        doc.setDrawColor(124, 58, 237);
+        doc.setLineWidth(0.4);
+        doc.line(0, 285, pageW, 285);
+      }
+
+      // ── SIMPAN FILE ──────────────────────────
+      const filename = `Laporan_${periodLabel}_${Utils.todayISO()}_${settings.storeName || 'KASIEKU'}.pdf`;
+      doc.save(filename);
+      Utils.toast('PDF berhasil diunduh! 📄', 'success');
+
+    } catch (err) {
+      console.error('Export PDF error:', err);
+      Utils.toast('Gagal membuat PDF: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="file-text"></i> Export PDF';
+      lucide.createIcons();
+    }
+  }
+
+  /** Load jsPDF dari CDN secara dinamis */
+  function loadJsPDF() {
+    return new Promise((resolve, reject) => {
+      if (window.jspdf) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Gagal memuat library PDF'));
+      document.head.appendChild(script);
+    });
   }
 
   return { init, load };

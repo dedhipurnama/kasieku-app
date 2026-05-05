@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="description" content="KASIEKU - Sistem Point of Sale Modern" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KASIEKU" />
+
+  <title>KASIEKU — Point of Sale</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+
+  <!-- Google Fonts: Syne + DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <!-- Icons: Lucide (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.383.0/umd/lucide.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SPLASH SCREEN
+═══════════════════════════════════════════════ -->
+<div id="splash-screen" class="splash">
+  <div class="splash__inner">
+    <div class="splash__logo">
+      <span class="splash__icon">🏪</span>
+      <h1 class="splash__title">KASIEKU</h1>
+      <p class="splash__sub">Point of Sale System</p>
+    </div>
+    <div class="splash__loader">
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     AUTH SCREEN (Login / Register)
+═══════════════════════════════════════════════ -->
+<div id="auth-screen" class="auth-screen hidden">
+  <div class="auth-bg">
+    <div class="auth-bg__orb auth-bg__orb--1"></div>
+    <div class="auth-bg__orb auth-bg__orb--2"></div>
+    <div class="auth-bg__orb auth-bg__orb--3"></div>
+  </div>
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <span class="auth-logo-icon">🏪</span>
+      <h2 class="auth-title">KASIEKU</h2>
+      <p class="auth-subtitle">Sistem Kasir Modern</p>
+    </div>
+
+    <!-- Tab Toggle -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Masuk</button>
+      <button class="auth-tab" data-tab="register">Daftar</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form">
+      <div class="field-group">
+        <label class="field-label">Username / Email</label>
+        <div class="field-wrap">
+          <i data-lucide="user" class="field-icon"></i>
+          <input type="text" id="login-username" class="field-input" placeholder="Masukkan username" autocomplete="username" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i data-lucide="lock" class="field-icon"></i>
+          <input type="password" id="login-password" class="field-input" placeholder="Masukkan password" autocomplete="current-password" required />
+          <button type="button" class="field-toggle" data-target="login-password">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn--primary btn--full" id="login-btn">
+        <span>Masuk</span>
+        <i data-lucide="arrow-right"></i>
+      </button>
+      <div id="login-error" class="auth-message auth-message--error hidden"></div>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" class="auth-form hidden">
+      <div class="field-group">
+        <label class="field-label">Nama Lengkap</label>
+        <div class="field-wrap">
+          <i data-lucide="user-circle" class="field-icon"></i>
+          <input type="text" id="reg-name" class="field-input" placeholder="Nama lengkap" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Username</label>
+        <div class="field-wrap">
+          <i data-lucide="at-sign" class="field-icon"></i>
+          <input type="text" id="reg-username" class="field-input" placeholder="Username unik" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <i data-lucide="mail" class="field-icon"></i>
+          <input type="email" id="reg-email" class="field-input" placeholder="email@toko.com" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i data-lucide="lock" class="field-icon"></i>
+          <input type="password" id="reg-password" class="field-input" placeholder="Min. 8 karakter" required />
+          <button type="button" class="field-toggle" data-target="reg-password">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Kode Toko</label>
+        <div class="field-wrap">
+          <i data-lucide="building-2" class="field-icon"></i>
+          <input type="text" id="reg-store-code" class="field-input" placeholder="Kode dari Admin (opsional)" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn--primary btn--full" id="register-btn">
+        <span>Buat Akun</span>
+        <i data-lucide="user-plus"></i>
+      </button>
+      <div id="register-message" class="auth-message hidden"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN APP SHELL
+═══════════════════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- ── Sidebar Navigation ── -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-icon">🏪</span>
+      <div class="brand-text">
+        <span class="brand-name">KASIEKU</span>
+        <span class="brand-role" id="sidebar-role">Kasir</span>
+      </div>
+      <button class="sidebar-close" id="sidebar-close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-section-label">Utama</div>
+      <a href="#" class="nav-item active" data-page="pos">
+        <i data-lucide="shopping-cart"></i>
+        <span>Kasir (POS)</span>
+      </a>
+      <a href="#" class="nav-item" data-page="products">
+        <i data-lucide="package"></i>
+        <span>Produk & Inventori</span>
+      </a>
+      <a href="#" class="nav-item" data-page="transactions">
+        <i data-lucide="receipt"></i>
+        <span>Riwayat Transaksi</span>
+      </a>
+
+      <div class="nav-section-label">Bisnis</div>
+      <a href="#" class="nav-item" data-page="reports">
+        <i data-lucide="bar-chart-2"></i>
+        <span>Laporan Penjualan</span>
+      </a>
+      <a href="#" class="nav-item" data-page="customers">
+        <i data-lucide="users"></i>
+        <span>Pelanggan & Loyalitas</span>
+      </a>
+
+      <div class="nav-section-label admin-only">Manajemen</div>
+      <a href="#" class="nav-item admin-only" data-page="users">
+        <i data-lucide="shield-check"></i>
+        <span>Manajemen User</span>
+      </a>
+      <a href="#" class="nav-item admin-only" data-page="settings">
+        <i data-lucide="settings-2"></i>
+        <span>Pengaturan Toko</span>
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="user-chip">
+        <div class="user-chip__avatar" id="sidebar-avatar">A</div>
+        <div class="user-chip__info">
+          <span class="user-chip__name" id="sidebar-name">Admin</span>
+          <span class="user-chip__store" id="sidebar-store">Toko Saya</span>
+        </div>
+        <button class="user-chip__logout" id="logout-btn" title="Keluar">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- ── Main Content Area ── -->
+  <main class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="topbar__menu-btn" id="menu-btn">
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="topbar__title" id="page-title">Kasir (POS)</div>
+      <div class="topbar__actions">
+        <button class="topbar__action-btn" id="barcode-scan-btn" title="Scan Barcode">
+          <i data-lucide="scan-barcode"></i>
+        </button>
+        <div class="topbar__clock" id="topbar-clock"></div>
+      </div>
+    </header>
+
+    <!-- Page Container -->
+    <div class="page-container">
+
+      <!-- ════ PAGE: POS ════ -->
+      <section id="page-pos" class="page active">
+        <div class="pos-layout">
+          <!-- Product Grid -->
+          <div class="pos-products">
+            <div class="pos-search-bar">
+              <i data-lucide="search"></i>
+              <input type="text" id="pos-search" placeholder="Cari produk atau scan barcode..." />
+              <button class="pos-filter-btn" id="pos-filter-btn">
+                <i data-lucide="filter"></i>
+              </button>
+            </div>
+            <div class="pos-categories" id="pos-categories">
+              <button class="category-pill active" data-cat="all">Semua</button>
+            </div>
+            <div class="pos-product-grid" id="pos-product-grid">
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <span>Memuat produk...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cart Panel -->
+          <div class="pos-cart">
+            <div class="cart-header">
+              <h3 class="cart-title">
+                <i data-lucide="shopping-bag"></i>
+                Keranjang
+              </h3>
+              <div class="cart-customer">
+                <button class="btn btn--ghost btn--sm" id="select-customer-btn">
+                  <i data-lucide="user-plus"></i>
+                  <span id="cart-customer-name">Pelanggan Umum</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="cart-items" id="cart-items">
+              <div class="cart-empty">
+                <i data-lucide="shopping-cart" class="cart-empty__icon"></i>
+                <p>Keranjang kosong</p>
+                <span>Pilih produk untuk memulai transaksi</span>
+              </div>
+            </div>
+
+            <div class="cart-summary">
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">Rp 0</span>
+              </div>
+              <div class="summary-row" id="discount-row" style="display:none">
+                <span>Diskon</span>
+                <span id="cart-discount" class="text-success">- Rp 0</span>
+              </div>
+              <div class="summary-row" id="loyalty-row" style="display:none">
+                <span>Poin Loyalitas</span>
+                <span id="cart-loyalty" class="text-accent">- Rp 0</span>
+              </div>
+              <div class="summary-row summary-row--total">
+                <span>TOTAL</span>
+                <span id="cart-total">Rp 0</span>
+              </div>
+            </div>
+
+            <div class="cart-discount-input">
+              <input type="number" id="discount-pct" placeholder="Diskon %" min="0" max="100" />
+              <span>%</span>
+            </div>
+
+            <div class="cart-payment-methods">
+              <button class="payment-btn active" data-method="cash">
+                <i data-lucide="banknote"></i> Tunai
+              </button>
+              <button class="payment-btn" data-method="debit">
+                <i data-lucide="credit-card"></i> Debit
+              </button>
+              <button class="payment-btn" data-method="qris">
+                <i data-lucide="qr-code"></i> QRIS
+              </button>
+              <button class="payment-btn" data-method="transfer">
+                <i data-lucide="smartphone"></i> Transfer
+              </button>
+            </div>
+
+            <!-- Cash payment input -->
+            <div id="cash-panel" class="cash-panel">
+              <label class="field-label">Uang Diterima</label>
+              <div class="field-wrap">
+                <span class="field-prefix">Rp</span>
+                <input type="number" id="cash-received" class="field-input" placeholder="0" />
+              </div>
+              <div class="quick-cash">
+                <button class="quick-cash-btn" data-amount="5000">5K</button>
+                <button class="quick-cash-btn" data-amount="10000">10K</button>
+                <button class="quick-cash-btn" data-amount="20000">20K</button>
+                <button class="quick-cash-btn" data-amount="50000">50K</button>
+                <button class="quick-cash-btn" data-amount="100000">100K</button>
+                <button class="quick-cash-btn" data-amount="exact">Pas</button>
+              </div>
+              <div class="change-display" id="change-display" style="display:none">
+                <span>Kembalian</span>
+                <strong id="change-amount">Rp 0</strong>
+              </div>
+            </div>
+
+            <!-- QRIS Panel -->
+            <div id="qris-panel" class="qris-panel hidden">
+              <div class="qris-placeholder">
+                <div class="qris-code-area" id="qris-code-area">
+                  <div class="qris-mock">
+                    <div class="qris-pattern"></div>
+                    <p>QRIS</p>
+                    <small id="qris-amount-label">Rp 0</small>
+                  </div>
+                </div>
+                <p class="qris-hint">Scan QR di atas dengan aplikasi dompet digital</p>
+              </div>
+            </div>
+
+            <button class="btn btn--primary btn--full btn--xl" id="checkout-btn" disabled>
+              <i data-lucide="check-circle"></i>
+              <span>Proses Pembayaran</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: PRODUCTS ════ -->
+      <section id="page-products" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Produk & Inventori</h2>
+          <div class="page-header__actions">
+            <button class="btn btn--ghost" id="export-products-btn">
+              <i data-lucide="download"></i> Export
+            </button>
+            <button class="btn btn--primary" id="add-product-btn">
+              <i data-lucide="plus"></i> Tambah Produk
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field-wrap search-wrap">
+            <i data-lucide="search" class="field-icon"></i>
+            <input type="text" id="product-search" class="field-input" placeholder="Cari produk..." />
+          </div>
+          <select id="product-cat-filter" class="field-select">
+            <option value="">Semua Kategori</option>
+          </select>
+          <select id="product-stock-filter" class="field-select">
+            <option value="">Semua Stok</option>
+            <option value="low">Stok Rendah</option>
+            <option value="out">Habis</option>
+          </select>
+        </div>
+
+        <!-- Stock Stats -->
+        <div class="stats-row" id="product-stats">
+          <div class="stat-card">
+            <span class="stat-card__label">Total Produk</span>
+            <span class="stat-card__value" id="stat-total-products">—</span>
+          </div>
+          <div class="stat-card stat-card--warning">
+            <span class="stat-card__label">Stok Rendah</span>
+            <span class="stat-card__value" id="stat-low-stock">—</span>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <span class="stat-card__label">Stok Habis</span>
+            <span class="stat-card__value" id="stat-out-stock">—</span>
+          </div>
+          <div class="stat-card stat-card--success">
+            <span class="stat-card__label">Nilai Inventori</span>
+            <span class="stat-card__value" id="stat-inventory-value">—</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="products-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nama Produk</th>
+                <th>Barcode</th>
+                <th>Kategori</th>
+                <th>Harga Jual</th>
+                <th>Harga Beli</th>
+                <th>Stok</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              <tr><td colspan="9" class="loading-cell"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: TRANSACTIONS ════ -->
+      <section id="page-transactions" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Riwayat Transaksi</h2>
+          <div class="page-header__actions">
+            <input type="date" id="trx-date-filter" class="field-input field-input--sm" />
+            <button class="btn btn--ghost" id="export-trx-btn">
+              <i data-lucide="download"></i> Export
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No. Nota</th>
+                <th>Waktu</th>
+                <th>Kasir</th>
+                <th>Pelanggan</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Metode</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody">
+              <tr><td colspan="8" class="loading-cell"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: REPORTS ════ -->
+      <section id="page-reports" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Laporan Penjualan</h2>
+          <div class="page-header__actions">
+            <select id="report-period" class="field-select">
+              <option value="daily">Harian</option>
+              <option value="weekly">Mingguan</option>
+              <option value="monthly" selected>Bulanan</option>
+            </select>
+            <button class="btn btn--ghost" id="export-report-btn">
+              <i data-lucide="file-text"></i> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card stat-card--accent">
+            <span class="stat-card__label">Total Pendapatan</span>
+            <span class="stat-card__value" id="report-revenue">—</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Total Transaksi</span>
+            <span class="stat-card__value" id="report-trx-count">—</span>
+          </div>
+          <div class="stat-card stat-card--success">
+            <span class="stat-card__label">Rata-rata Transaksi</span>
+            <span class="stat-card__value" id="report-avg">—</span>
+          </div>
+          <div class="stat-card stat-card--warning">
+            <span class="stat-card__label">Produk Terjual</span>
+            <span class="stat-card__value" id="report-items">—</span>
+          </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="chart-card">
+          <div class="chart-card__header">
+            <h3>Grafik Penjualan</h3>
+          </div>
+          <div class="chart-area" id="sales-chart">
+            <canvas id="sales-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="report-grid">
+          <div class="chart-card">
+            <div class="chart-card__header"><h3>Produk Terlaris</h3></div>
+            <div id="top-products-list" class="rank-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__header"><h3>Metode Pembayaran</h3></div>
+            <div id="payment-methods-chart" class="donut-wrap">
+              <canvas id="payment-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: CUSTOMERS ════ -->
+      <section id="page-customers" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Pelanggan & Loyalitas</h2>
+          <button class="btn btn--primary" id="add-customer-btn">
+            <i data-lucide="user-plus"></i> Tambah Pelanggan
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>No. HP</th>
+                <th>Email</th>
+                <th>Total Poin</th>
+                <th>Total Belanja</th>
+                <th>Level</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody">
+              <tr><td colspan="7" class="loading-cell"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: USERS ════ -->
+      <section id="page-users" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Manajemen User</h2>
+          <button class="btn btn--primary admin-only" id="add-user-btn">
+            <i data-lucide="user-plus"></i> Tambah User
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Terakhir Login</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" class="loading-cell"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ════ PAGE: SETTINGS ════ -->
+      <section id="page-settings" class="page">
+        <div class="page-header">
+          <h2 class="page-heading">Pengaturan Toko</h2>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3 class="settings-card__title">
+              <i data-lucide="building-2"></i> Profil Toko
+            </h3>
+            <form id="store-settings-form">
+              <div class="field-group">
+                <label class="field-label">Nama Toko</label>
+                <input type="text" id="s-store-name" class="field-input" placeholder="Nama toko Anda" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Alamat</label>
+                <textarea id="s-store-address" class="field-input field-textarea" placeholder="Alamat lengkap"></textarea>
+              </div>
+              <div class="field-group">
+                <label class="field-label">No. Telepon</label>
+                <input type="tel" id="s-store-phone" class="field-input" placeholder="08xx-xxxx-xxxx" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Footer Struk</label>
+                <input type="text" id="s-receipt-footer" class="field-input" placeholder="Terima kasih telah berbelanja!" />
+              </div>
+              <button type="submit" class="btn btn--primary">
+                <i data-lucide="save"></i> Simpan Pengaturan
+              </button>
+            </form>
+          </div>
+          <div class="settings-card">
+            <h3 class="settings-card__title">
+              <i data-lucide="star"></i> Program Loyalitas
+            </h3>
+            <div class="field-group">
+              <label class="field-label">Poin per Rp 1.000</label>
+              <input type="number" id="s-loyalty-rate" class="field-input" value="1" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Nilai Tukar Poin (Rp/poin)</label>
+              <input type="number" id="s-point-value" class="field-input" value="10" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Level Silver (poin)</label>
+              <input type="number" id="s-silver-threshold" class="field-input" value="500" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Level Gold (poin)</label>
+              <input type="number" id="s-gold-threshold" class="field-input" value="2000" />
+            </div>
+            <button class="btn btn--primary" id="save-loyalty-btn">
+              <i data-lucide="save"></i> Simpan
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-container -->
+  </main>
+</div><!-- /app -->
+
+<!-- ═══════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════ -->
+
+<!-- Modal: Product Form -->
+<div id="modal-product" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal__header">
+      <h3 id="product-modal-title">Tambah Produk</h3>
+      <button class="modal__close" data-modal="modal-product"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <form id="product-form">
+        <input type="hidden" id="pf-id" />
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Nama Produk *</label>
+            <input type="text" id="pf-name" class="field-input" required />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Barcode / SKU</label>
+            <div class="field-wrap">
+              <input type="text" id="pf-barcode" class="field-input" placeholder="Scan atau ketik manual" />
+              <button type="button" class="field-action-btn" id="gen-barcode-btn" title="Generate otomatis">
+                <i data-lucide="refresh-cw"></i>
+              </button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Kategori</label>
+            <input type="text" id="pf-category" class="field-input" placeholder="Makanan, Minuman, dll" list="category-list" />
+            <datalist id="category-list"></datalist>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Satuan</label>
+            <input type="text" id="pf-unit" class="field-input" placeholder="pcs, kg, liter, dll" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Harga Beli (HPP)</label>
+            <div class="field-wrap">
+              <span class="field-prefix">Rp</span>
+              <input type="number" id="pf-cost" class="field-input" placeholder="0" min="0" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Harga Jual *</label>
+            <div class="field-wrap">
+              <span class="field-prefix">Rp</span>
+              <input type="number" id="pf-price" class="field-input" placeholder="0" min="0" required />
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Stok Awal</label>
+            <input type="number" id="pf-stock" class="field-input" placeholder="0" min="0" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Stok Minimum (alert)</label>
+            <input type="number" id="pf-min-stock" class="field-input" placeholder="5" min="0" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Deskripsi</label>
+          <textarea id="pf-desc" class="field-input field-textarea" rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-modal="modal-product">Batal</button>
+      <button class="btn btn--primary" id="save-product-btn">
+        <i data-lucide="save"></i> Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Customer Form -->
+<div id="modal-customer" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal__header">
+      <h3 id="customer-modal-title">Tambah Pelanggan</h3>
+      <button class="modal__close" data-modal="modal-customer"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <form id="customer-form">
+        <input type="hidden" id="cf-id" />
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Nama Lengkap *</label>
+            <input type="text" id="cf-name" class="field-input" required />
+          </div>
+          <div class="field-group">
+            <label class="field-label">No. HP *</label>
+            <input type="tel" id="cf-phone" class="field-input" required />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Email</label>
+            <input type="email" id="cf-email" class="field-input" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Tanggal Lahir</label>
+            <input type="date" id="cf-dob" class="field-input" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Alamat</label>
+          <textarea id="cf-address" class="field-input field-textarea" rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-modal="modal-customer">Batal</button>
+      <button class="btn btn--primary" id="save-customer-btn">
+        <i data-lucide="save"></i> Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Select Customer (POS) -->
+<div id="modal-select-customer" class="modal-backdrop hidden">
+  <div class="modal modal--sm">
+    <div class="modal__header">
+      <h3>Pilih Pelanggan</h3>
+      <button class="modal__close" data-modal="modal-select-customer"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <div class="field-wrap" style="margin-bottom:12px">
+        <i data-lucide="search" class="field-icon"></i>
+        <input type="text" id="customer-search-pos" class="field-input" placeholder="Cari nama atau no. HP..." />
+      </div>
+      <div id="customer-list-pos" class="customer-select-list"></div>
+      <button class="btn btn--ghost btn--full" id="use-general-customer">
+        <i data-lucide="user"></i> Gunakan Pelanggan Umum
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: User Form -->
+<div id="modal-user" class="modal-backdrop hidden">
+  <div class="modal modal--sm">
+    <div class="modal__header">
+      <h3 id="user-modal-title">Tambah User</h3>
+      <button class="modal__close" data-modal="modal-user"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <form id="user-form">
+        <input type="hidden" id="uf-id" />
+        <div class="field-group">
+          <label class="field-label">Nama Lengkap *</label>
+          <input type="text" id="uf-name" class="field-input" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Username *</label>
+          <input type="text" id="uf-username" class="field-input" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email *</label>
+          <input type="email" id="uf-email" class="field-input" required />
+        </div>
+        <div class="field-group" id="uf-password-group">
+          <label class="field-label">Password *</label>
+          <input type="password" id="uf-password" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Role *</label>
+          <select id="uf-role" class="field-select">
+            <option value="kasir">Kasir</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-modal="modal-user">Batal</button>
+      <button class="btn btn--primary" id="save-user-btn">
+        <i data-lucide="save"></i> Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Receipt / Struk -->
+<div id="modal-receipt" class="modal-backdrop hidden">
+  <div class="modal modal--sm">
+    <div class="modal__header">
+      <h3>Struk Pembayaran</h3>
+      <button class="modal__close" data-modal="modal-receipt"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <div id="receipt-content" class="receipt">
+        <!-- Dynamically generated -->
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" id="print-receipt-btn">
+        <i data-lucide="printer"></i> Cetak
+      </button>
+      <button class="btn btn--ghost" id="share-receipt-btn">
+        <i data-lucide="share-2"></i> Bagikan
+      </button>
+      <button class="btn btn--primary" data-modal="modal-receipt" id="done-receipt-btn">
+        <i data-lucide="check"></i> Selesai
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Barcode Scanner -->
+<div id="modal-scanner" class="modal-backdrop hidden">
+  <div class="modal modal--sm">
+    <div class="modal__header">
+      <h3>Scan Barcode</h3>
+      <button class="modal__close" data-modal="modal-scanner"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal__body">
+      <div class="scanner-area">
+        <video id="scanner-video" class="scanner-video" autoplay playsinline></video>
+        <div class="scanner-overlay">
+          <div class="scanner-frame"></div>
+        </div>
+      </div>
+      <p class="scanner-hint">Arahkan kamera ke barcode produk</p>
+      <div class="field-wrap" style="margin-top:12px">
+        <input type="text" id="manual-barcode" class="field-input" placeholder="Atau ketik barcode manual..." />
+        <button class="btn btn--primary btn--sm" id="manual-barcode-btn">Cari</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Print Area (hidden) -->
+<div id="print-area" class="print-area"></div>
+
+<!-- Scripts -->
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/pos.js"></script>
+<script src="js/products.js"></script>
+<script src="js/modules.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

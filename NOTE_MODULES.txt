@@ -1,0 +1,8 @@
+<!-- Tambahkan baris ini di index.html, sebelum app.js -->
+<!-- Ganti baris:
+  <script src="js/users.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/scanner.js"></script>
+dengan: -->
+<script src="js/modules.js"></script>
+<!-- modules.js sudah mencakup: Transactions, Reports, Customers, Users, Settings, Scanner -->
